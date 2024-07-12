@@ -31,7 +31,7 @@ const Home = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [infoType, setInfoType] = useState<string>('domain');
-
+  const [errorResponse, setErrorResponse] = useState<any>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,13 +40,14 @@ const Home = () => {
       setIsLoading(true);
       setError(null);
       setData(null);
+      setErrorResponse({});
 
       try {
         const res = await fetch(`/api/whois?domain=${domain}&outputFormat=JSON`);
         const result = await res.json();
 
         if (res.ok) {
-          setData(result.WhoisRecord);
+          result.WhoisRecord ? setData(result.WhoisRecord) : setErrorResponse(result.ErrorMessage);
         } else {
           setError(result.error || 'Failed to fetch data');
         }
@@ -65,6 +66,14 @@ const Home = () => {
     setInfoType(formData.infoType);
   };
 
+  const handleInfoTypeChange = (infoType: string, domainChange: string) => {
+    if(data?.domainName != domainChange && data?.domainName != 'com.com') {
+      setData(null)
+    }
+    setInfoType(infoType);
+  };
+
+
   const calculateDomainAge = (createdDate: string) => {
     const now = new Date();
     const created = new Date(createdDate);
@@ -80,15 +89,23 @@ const Home = () => {
     if (days > 0) age += `${days} day${days > 1 ? 's' : ''}`;
     return age.trim().replace(/,\s*$/, '');
   };
+  
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Whois Lookup</h1>
-      <WhoisForm onSubmit={handleLookup} />
-      {isLoading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="container mx-auto p-8 ">
+      <h1 className="text-2xl font-bold mb-4 text-center">Whois Lookup</h1>
+      <WhoisForm 
+        onSubmit={handleLookup} 
+        onInfoTypeChange={handleInfoTypeChange}
+      />
+      {!data && <div className='w-full h-[350px] flex items-center justify-center'>
+        {isLoading && <span className="loader"></span>}
+        {error && <p className="text-red-500">{error}</p>}
+        {errorResponse && <p className="text-red-500">{errorResponse.msg}</p>}
+      </div>}
+      
       {data && (
-        <div>
+        <div className='mt-12'>
           <h2 className="text-xl font-bold mt-4">{infoType == 'domain' ?  'Domain Information' : 'Contact Information' }</h2>
           {infoType === 'domain' && (
             <DataTable
@@ -119,10 +136,10 @@ const Home = () => {
                 'Contact Email'
               ]}
               data={[
-                data.registrant?.name || '-',
-                data.technicalContact?.name || '-',
-                data.administrativeContact?.name || '-',
-                data.contactEmail || '-'
+                data.registrant?.name || 'N/A',
+                data.technicalContact?.name || 'N/A',
+                data.administrativeContact?.name || 'N/A',
+                data.contactEmail || 'N/A'
               ]}
             />
           )}
