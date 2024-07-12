@@ -61,7 +61,7 @@ const WhoisForm: React.FC<WhoisFormProps> = ({ onSubmit, onInfoTypeChange }) => 
           <option value="contact">Contact Information</option>
         </select>
       </div>
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded w-1/4">Lookup</button>
+      <button type="submit" className="bg-blue-500 text-white p-2 rounded w-[300px]">Lookup</button>
       {errors.infoType && <p className="text-red-500">Information type is required</p>}
     </form>
   );
